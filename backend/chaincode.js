@@ -1,7 +1,5 @@
 'use strict';
 
-const stringify  = require('json-stringify-deterministic');
-
 const { Contract } = require('fabric-contract-api');
 
 class storageELRContract extends Contract {
@@ -23,7 +21,7 @@ class storageELRContract extends Contract {
             store_cred: store_cred,
             course_id: course_id,
         }
-        await ctx.stub.putState(pubK, Buffer.from(stringify(elr)))
+        await ctx.stub.putState(pubK, Buffer.from(JSON.stringify(elr)))
         return 1;
  
     }
@@ -48,7 +46,7 @@ class storageELRContract extends Contract {
                 result = await iterator.next();         
         }
      
-        return 0;
+        return "ELR not found!";
     }
 }
 
@@ -72,7 +70,7 @@ class registerEntitiesContract extends Contract {
             expiryTime: expiryTime,
         }
 
-        await ctx.stub.putState(new_id, Buffer.from(stringify(details)))
+        await ctx.stub.putState(new_id, Buffer.from(JSON.stringify(details)))
         return 1;
  
     }
@@ -100,7 +98,7 @@ class registerEntitiesContract extends Contract {
         return 0;
     }
 
-    async removeRegistration(ctx, user_id) {
+    async removeRegistration(ctx, curr_id) {
   
         const registrationExisting = await ctx.stub.getState(curr_id)
         if (registrationExisting && registrationExisting.length > 0){
@@ -112,5 +110,5 @@ class registerEntitiesContract extends Contract {
    
 }
 
-module.exports.storageELRContract = storageELRContract;
-module.exports.registerEntitiesContract = registerEntitiesContract;
+module.exports = storageELRContract;
+// module.exports.registerEntitiesContract = registerEntitiesContract;

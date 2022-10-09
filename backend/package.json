@@ -4,7 +4,8 @@
   "description": "IT465 Project",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "fabric-chaincode-node start"
   },
   "repository": {
     "type": "git",
@@ -17,10 +18,10 @@
   },
   "homepage": "https://github.com/rak108/MOOCsChain#readme",
   "dependencies": {
+    "axios": "^0.27.2",
     "express": "^4.18.1",
     "fabric-contract-api": "^2.2.3",
     "fabric-shim": "^2.2.3",
-    "ipfs-http-client": "^56.0.2",
-    "request": "^2.88.2"
+    "ipfs-http-client": "^56.0.0"
   }
 }
