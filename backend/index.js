@@ -9,26 +9,20 @@ const axios = require('axios');
 const ipfs = create('http://localhost:5001');
 const app = express();
 
-const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-var session = require('express-session');
+const cookieParser = require('cookie-parser');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // const testContract = require('MOOCsChain/backend/chaincode');
 
-app.use(session({
-    cookie: { maxAge: 60000 },
-    keys: ["s3cr3tkey"],
-    saveUninitialized: true,
-    resave: "true",
-    secret: "s3cr3tkey"
-}));
-
 const registrationRoutes = require("./routes/registration");
 const moocsRoutes = require("./routes/moocs");
+
+const PORT = process.env.PORT || 8080;
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -76,10 +70,9 @@ const retrieveELR = async (elrStoredHash) => {
 
 const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
-  });
+});
 
-const P = 11;
-  
+// Info: Copied to registration controller
 const registerEntity = async ( info ) => {
     const encryptedData = crypto.publicEncrypt(
         {
@@ -115,8 +108,7 @@ const saveELRs = async ({ sigma, PubKey, course_id, elrContent }) => {
     return 1;
 }
 
-const getELRs = async ({ sigma, course_id }) => {
-
+const getELRs = async (sigma, course_id) => {
     const hashValue = crypto.createHmac("sha256", elrContent);
 
     const elrIPFS = uploadELR(hashValue, encryptedData);
