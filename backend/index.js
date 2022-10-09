@@ -1,6 +1,6 @@
 const express = require('express');
 const { create } = require('ipfs-http-client');
-const request = require('request');
+const axios = require('axios');
 
 const ipfs = create('http://localhost:5001');
 const app = express();
@@ -21,32 +21,23 @@ app.post('/uploadElr', async (req, res) => {
 const uploadELR = async ({ hashValue, content }) => {
     const elr = { hashValue: hashValue, content: Buffer.from(content) };
     const elrAdded = await ipfs.add(elr);
-    console.log(elrAdded['path'])
+    console.log(elrAdded['path']);
     return elrAdded['path'];
 }
 
 app.get('/retrieveElr', async (req, res) => {
     const data = req.query['elrHash'];
-    console.log(data)
     const elrStoredContent = await retrieveELR(data);
     return res.send(elrStoredContent);
 });
 
-const retrieveELR = async ({ elrStoredHash }) => {
-    const elrHash = elrStoredHash;
-    console.log(elrStoredHash, elrHash)
-    const options = {
-    'method': 'GET',
-    'url': 'https://gateway.ipfs.io/ipfs/' + elrStoredHash,
-    };
-    elrContent = ''
-    request(options, function (error, response) {
-    if (error) throw new Error(error);
-    console.log(response.body)
-    elrContent = response.body;
+const retrieveELR = async (elrStoredHash) => {
+    return await axios.get('https://gateway.ipfs.io/ipfs/' + elrStoredHash).then(res => {
+        console.log(res.data);
+        return res.data;
+    }).catch(err => {
+        console.log(err.message);
     });
-
-    return elrContent;
 }
 
 app.listen(3000, () => {
