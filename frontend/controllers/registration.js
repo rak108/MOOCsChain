@@ -9,6 +9,9 @@ exports.getRegister = (req, res) => {
 }
 
 exports.postLogin = async (req, res) => {
+    res.redirect("/lms");
+    return;
+
     const email = req.body.email;
     const password = req.body.password;
     var user;
@@ -16,7 +19,7 @@ exports.postLogin = async (req, res) => {
         user = data;
 
         if(user.password === password) {
-            res.send("Welcome " + user.name + "!!");
+            res.redirect("/lms");
         }
         else {
             res.render("login", { title: "Wrong password!" });
