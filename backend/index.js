@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const crypto = require('crypto')
+const crypto = require('crypto');
 
 const { create } = require('ipfs-http-client');
 const axios = require('axios');
@@ -9,13 +9,41 @@ const axios = require('axios');
 const ipfs = create('http://localhost:5001');
 const app = express();
 
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+var session = require('express-session');
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
 // const testContract = require('MOOCsChain/backend/chaincode');
 
-app.use(express.json());
+app.use(session({
+    cookie: { maxAge: 60000 },
+    keys: ["s3cr3tkey"],
+    saveUninitialized: true,
+    resave: "true",
+    secret: "s3cr3tkey"
+}));
 
-app.get('/', (req, res) => {
-    return res.send('MOOCsChain Application');
-});
+const registrationRoutes = require("./routes/registration");
+const moocsRoutes = require("./routes/moocs");
+
+app.set("view engine", "ejs");
+app.set("views", "views");
+
+app.use("/", registrationRoutes);
+app.use("/lms/", moocsRoutes);
+
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/moocschain", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    app.listen(PORT, () => {
+        console.log(`---- Server is up and running on port ${PORT} ----`);
+    });
+}).catch(err => console.log(err));
 
 app.post('/uploadElr', async (req, res) => {
     const data = req.body;
@@ -45,10 +73,6 @@ const retrieveELR = async (elrStoredHash) => {
         console.log(err.message);
     });
 }
-
-app.listen(3000, () => {
-    console.log('----Server is up and running on port 3000----');
-});
 
 const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
