@@ -17,12 +17,14 @@ app.use(session({
 }));
 
 const registrationRoutes = require("./routes/registration");
+const moocsRoutes = require("./routes/moocs");
 const User = require("./models/users");
 
 app.set("view engine", "ejs");
 app.set("views", "views");
 
 app.use("/", registrationRoutes);
+app.use("/lms/", moocsRoutes);
 
 mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/moocschain", {
     useNewUrlParser: true,

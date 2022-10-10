@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const crypto = require('crypto')
+const crypto = require('crypto');
 
 const { create } = require('ipfs-http-client');
 const axios = require('axios');
@@ -9,13 +9,35 @@ const axios = require('axios');
 const ipfs = create('http://localhost:5001');
 const app = express();
 
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(cookieParser());
+
 // const testContract = require('MOOCsChain/backend/chaincode');
 
-app.use(express.json());
+const registrationRoutes = require("./routes/registration");
+const moocsRoutes = require("./routes/moocs");
 
-app.get('/', (req, res) => {
-    return res.send('MOOCsChain Application');
-});
+const PORT = process.env.PORT || 8080;
+
+app.set("view engine", "ejs");
+app.set("views", "views");
+
+app.use("/", registrationRoutes);
+app.use("/lms/", moocsRoutes);
+
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/moocschain", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => {
+    app.listen(PORT, () => {
+        console.log(`---- Server is up and running on port ${PORT} ----`);
+    });
+}).catch(err => console.log(err));
 
 app.post('/uploadElr', async (req, res) => {
     const data = req.body;
@@ -46,16 +68,11 @@ const retrieveELR = async (elrStoredHash) => {
     });
 }
 
-app.listen(3000, () => {
-    console.log('----Server is up and running on port 3000----');
-});
-
 const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
-  });
+});
 
-const P = 11;
-  
+// Info: Copied to registration controller
 const registerEntity = async ( info ) => {
     const encryptedData = crypto.publicEncrypt(
         {
@@ -91,8 +108,7 @@ const saveELRs = async ({ sigma, PubKey, course_id, elrContent }) => {
     return 1;
 }
 
-const getELRs = async ({ sigma, course_id }) => {
-
+const getELRs = async (sigma, course_id) => {
     const hashValue = crypto.createHmac("sha256", elrContent);
 
     const elrIPFS = uploadELR(hashValue, encryptedData);
