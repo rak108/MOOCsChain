@@ -1,0 +1,36 @@
+{
+  "name": "moocschain",
+  "version": "1.0.0",
+  "description": "IT465 Project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "fabric-chaincode-node start"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rak108/MOOCsChain.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rak108/MOOCsChain/issues"
+  },
+  "homepage": "https://github.com/rak108/MOOCsChain#readme",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "body-parser": "^1.20.0",
+    "cookie-parser": "^1.4.6",
+    "eccrypto": "^1.1.6",
+    "ejs": "^3.1.8",
+    "express": "^4.18.1",
+    "express-session": "^1.17.3",
+    "fabric-ca-client": "^2.2.15",
+    "fabric-contract-api": "^2.2.3",
+    "fabric-network": "^2.2.15",
+    "fabric-shim": "^2.2.3",
+    "ipfs-http-client": "^56.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.5.5"
+  }
+}
