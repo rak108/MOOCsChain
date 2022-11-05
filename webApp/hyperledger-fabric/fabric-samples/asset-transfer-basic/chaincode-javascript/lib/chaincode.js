@@ -11,20 +11,14 @@ class storageELRContract extends Contract {
         console.log("<==Instantiated StorageELR Chaincode==>");
     }
 
-    async addELR(ctx, pubK, sigma, hash_val, store_cred, course_id ) {
+    async addELR(ctx, hmac, sigma, hash_val, course_id ) {
 
-        const elrExisting = await ctx.stub.getState(pubK)
-        if (elrExisting && elrExisting.length > 0){
-            console.log("This elr exists!");    
-            return 0;
-        }
         const elr = {
             sigma: sigma,
             hash_val: hash_val,
-            store_cred: store_cred,
             course_id: course_id,
         }
-        await ctx.stub.putState(pubK, Buffer.from(JSON.stringify(elr)))
+        await ctx.stub.putState(hmac, Buffer.from(JSON.stringify(elr)))
         return 1;
  
     }
@@ -33,6 +27,7 @@ class storageELRContract extends Contract {
   
         const iterator = await ctx.stub.getStateByRange('','');
         let result = await iterator.next();
+        let final_elr;
         let found = false;
         while (!found){
             const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
@@ -44,10 +39,13 @@ class storageELRContract extends Contract {
                 record = strValue; 
             }
             if (record.sigma == sigma && record.course_id == course_id)  
-                return record;
+                final_elr = record;
             
                 result = await iterator.next();         
         }
+
+        if (final_elr.sigma == sigma && final_elr.course_id == course_id)
+            return final_elr;
      
         return "ELR not found!";
     }
@@ -80,6 +78,7 @@ class registerEntitiesContract extends Contract {
 
     async queryRegistrations(ctx, user_id) {
   
+        try {
         const iterator = await ctx.stub.getStateByRange('','');
         let result = await iterator.next();
         let found = false;
@@ -96,6 +95,10 @@ class registerEntitiesContract extends Contract {
                 return record;
             
             result = await iterator.next();
+        }
+    }
+        catch (err) {
+            console.log(err);
         }
      
         return 0;

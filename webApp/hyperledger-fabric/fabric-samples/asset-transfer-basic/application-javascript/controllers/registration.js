@@ -62,13 +62,11 @@ async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTi
             gateway = await initGateway();
             }
             
-            console.log(sigma, encryptedData, PubKey, registrationTime);
-
             const network = await gateway.getNetwork(channelName);
             const registerEntitiesContract = network.getContract(chaincodeName, 'registerEntitiesContract');
 
             console.log('------------Register Entitities Contract----------')
-            console.log('\n--> Submit Transaction: InitLedger, function initializes the ledger');
+            console.log('\n--> Evaluate Transaction: InitLedger, function initializes the ledger');
             await registerEntitiesContract.evaluateTransaction('InitLedger');
             console.log('<==Instantiated RegisterEntities Chaincode==>');
 
@@ -76,9 +74,6 @@ async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTi
             result = await registerEntitiesContract.evaluateTransaction('queryRegistrations', sigma);
             console.log(`*** Result: ${(result)}`);
 
-            if (`${result}` !== '') {
-                return 0;
-            }
 
             console.log('\n--> Submit Transaction: updateRegistrationInformation, creates/updates registration information with curr_id, new_id, encrypted_details, pubK, expiryTime arguments');
             result = await registerEntitiesContract.submitTransaction('updateRegistrationInformation', '', sigma, encryptedData, PubKey, registrationTime);
@@ -105,13 +100,14 @@ async function loginUserinLedger(sigma) {
             const registerEntitiesContract = network.getContract(chaincodeName, 'registerEntitiesContract');
 
             console.log('------------Register Entitities Contract----------')
-            console.log('\n--> Submit Transaction: InitLedger, function initializes the ledger');
+            console.log('\n--> Evaluate Transaction: InitLedger, function initializes the ledger');
             await registerEntitiesContract.evaluateTransaction('InitLedger');
             console.log('<==Instantiated RegisterEntities Chaincode==>');
 
             console.log('\n--> Evaluate Transaction: queryRegistrations, function returns an ELR with a given sigma value in a course');
             result = await registerEntitiesContract.evaluateTransaction('queryRegistrations', sigma);
-            console.log(`*** Result: ${(result)}`);    
+            console.log(`*** Result: ${(result)}`);
+                
 
             return result;
 
@@ -141,23 +137,19 @@ exports.postLogin = async (req, res) => {
 
     let info = { email: email, password: password };
 
-    console.log(info);
-
     let hmac = crypto.createHmac("sha256", Buffer.from(JSON.stringify(info), 'base64'));
     hmac.update('0');
     let sigma = hmac.digest('base64');
 
-    console.log(sigma)
-
 
     isUser = await loginUserinLedger(sigma);
 
-    if(isUser) {
+    if(isUser != 0) {
         let token = generateAccessToken({ moocs: sigma });
         res.cookie('moocs', token, { maxAge: 60000 }).redirect("/lms/");
     }
     else {
-        res.render("login", { title: "Error!" });
+        res.render("login", { title: "Error! Incorrect email or password" });
     }
 }
 
@@ -168,17 +160,14 @@ exports.postRegister = async (req, res) => {
 
     let info = { email: email, password: password };
 
-    console.log("hi",info);
-
     encInfo = { email: email, password: password, name: username };
 
-    const encryptedData = await eccrypto.encrypt(publicKeyA, Buffer.from(encInfo.toString()))
+    const encryptedData = await eccrypto.encrypt(publicKeyA, Buffer.from(encInfo.toString()));
 
     let encPriv = encryptedData.toString("base64");
     let hmac = crypto.createHmac("sha256", Buffer.from(JSON.stringify(info), 'base64'));
     hmac.update('0');
     let sigma = hmac.digest('base64');
-    console.log(sigma);
     PubKey = encPriv + sigma;
     registrationTime = new Date().toISOString();
 

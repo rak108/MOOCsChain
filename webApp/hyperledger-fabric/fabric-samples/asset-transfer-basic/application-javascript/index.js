@@ -55,58 +55,44 @@ mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost:27017/moocschai
     });
 }).catch(err => console.log(err));
 
-app.post('/uploadElr', async (req, res) => {
-    const data = req.body;
-    console.log(data);
-    const elrStoredHash = await uploadELR(data);
-    return res.send(`Path: ${ elrStoredHash }`);
-});
-
-const uploadELR = async ({ hashValue, content }) => {
-    const elr = { hashValue: hashValue, content: Buffer.from(content) };
-    const elrAdded = await ipfs.add(elr);
-    console.log(elrAdded['path']);
-    return elrAdded['path'];
-}
-
-app.get('/retrieveElr', async (req, res) => {
-    const data = req.query['elrHash'];
-    const elrStoredContent = await retrieveELR(data);
-    return res.send(elrStoredContent);
-});
-
-const retrieveELR = async (elrStoredHash) => {
-    return await axios.get('https://gateway.ipfs.io/ipfs/' + elrStoredHash).then(res => {
-        console.log(res.data);
-        return res.data;
-    }).catch(err => {
-        console.log(err.message);
-    });
-}
-
-
-const saveELRs = async ({ sigma, PubKey, course_id, elrContent }) => {
-    const encryptedData = crypto.publicEncrypt(
-        {
-          key: publicKey,
-          padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-          oaepHash: "sha256",
-        },
-        Buffer.from(elrContent)
-      );
+// app.post('/uploadElr', async (req, res) => {
+//     const data = req.body;
+//     console.log(data);
     
-    const hashValue = crypto.createHmac("sha256", elrContent);
+// });
 
-    const elrIPFS = uploadELR(hashValue, encryptedData);
-    return 1;
-}
 
-const getELRs = async (sigma, course_id) => {
-    const hashValue = crypto.createHmac("sha256", elrContent);
 
-    const elrIPFS = uploadELR(hashValue, encryptedData);
-    return 1;
-}
+// app.get('/retrieveElr', async (req, res) => {
+//     const data = req.query['elrHash'];
+//     const elrStoredContent = await retrieveELR(data);
+//     return res.send(elrStoredContent);
+// });
+
+
+
+// const saveELRs = async ({ sigma, PubKey, course_id, elrContent }) => {
+//     const encryptedData = crypto.publicEncrypt(
+//         {
+//           key: publicKey,
+//           padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+//           oaepHash: "sha256",
+//         },
+//         Buffer.from(elrContent)
+//       );
+    
+//     const hashValue = crypto.createHmac("sha256", elrContent);
+
+//     const elrIPFS = uploadELR(hashValue, encryptedData);
+//     return 1;
+// }
+
+// const getELRs = async (sigma, course_id) => {
+//     const hashValue = crypto.createHmac("sha256", elrContent);
+
+//     const elrIPFS = uploadELR(hashValue, encryptedData);
+//     return 1;
+// }
 
 
 // module.exports.contracts = [ testContract ];
