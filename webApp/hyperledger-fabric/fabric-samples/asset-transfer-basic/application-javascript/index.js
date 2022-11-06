@@ -38,7 +38,7 @@ app.use(cookieParser());
 const registrationRoutes = require("./routes/registration");
 const moocsRoutes = require("./routes/moocs");
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 4000;
 
 app.set("view engine", "ejs");
 app.set("views", "views");

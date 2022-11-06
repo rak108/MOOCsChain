@@ -1,8 +1,11 @@
 const User = require("../models/users");
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const gway = require('../index')
+const gway = require('../index');
 const eccrypto = require("eccrypto");
+
+const { create } = require('ipfs-http-client');
+const ipfs = create('http://localhost:5001');
 
 const P = 11;
 
@@ -54,7 +57,7 @@ async function initGateway(){
 
 }
 
-const uploadELR = async ({ elrTime, content }) => {
+const uploadELR = async (elrTime, content) => {
     const elr = { timestamp: Buffer.from(elrTime), content: Buffer.from(content) };
     const elrAdded = await ipfs.add(elr);
     console.log(elrAdded['path']);
@@ -74,16 +77,14 @@ let gateway = undefined;
 
 async function addElrInLedger(sigma, elr_Content, course_id) {
     elr_Time = new Date().toISOString();
-    const elrStoredHash = await uploadELR({elr_Content, elr_Time});
+    const elrStoredHash = await uploadELR(elr_Content, elr_Time);
     console.log(`Path: ${ elrStoredHash }`);
 
     let hmac = crypto.createHmac("sha256", sigma + elr_Content, 'base64');
     hmac.update('0');
 
     try {   
-            if (gateway == undefined){
-            gateway = await initGateway();
-            }
+            if (gateway == undefined) gateway = await initGateway();
             
             const network = await gateway.getNetwork(channelName);
             const storageELRContract = network.getContract(chaincodeName, 'storageELRContract');
@@ -111,9 +112,7 @@ async function addElrInLedger(sigma, elr_Content, course_id) {
 async function queryElrInLedger(sigma, course_id) {
 
     try {   
-            if (gateway == undefined){
-            gateway = await initGateway();
-            }
+            if (gateway == undefined) gateway = await initGateway();
             
             const network = await gateway.getNetwork(channelName);
             const storageELRContract = network.getContract(chaincodeName, 'storageELRContract');
@@ -124,8 +123,8 @@ async function queryElrInLedger(sigma, course_id) {
             console.log('<==Instantiated StorageELR Chaincode==>');
 
 
-            console.log('\n--> Submit Transaction: addELR, creates ELR of user in course with new_id, IPFS ELR hash value, course_id');
-            result = await storageELRContract.evaluateTransaction('addELR', sigma, elrStoredHash, course_id);
+            console.log('\n--> Submit Transaction: queryELR, retrives all ELRs of user in course with new_id, course_id');
+            result = await storageELRContract.evaluateTransaction('queryELR', sigma, course_id);
             console.log('*** Result: committed');
             if (`${result}` !== '') {
                 console.log(`*** Result: ${prettyJSONString(result)}`);
@@ -136,8 +135,25 @@ async function queryElrInLedger(sigma, course_id) {
             return result;
 
         } catch (error) {
-        console.error(`******** FAILED to run the application: ${error}`);
-    }
+            console.error(`******** FAILED to run the application: ${error}`);
+        }
+}
+
+exports.uploadElr = async (req, res) => {
+    let course_id = 25; // TODO: Update hard-coded ID
+
+    console.log('uploadELR (req.sigma) ===> ', req.sigma); // TODO: Remove
+
+    addElrInLedger(req.sigma, req.body.content, course_id).then(() => {
+        res.redirect("/lms/elr");
+    });
+}
+
+exports.retrieveELR = async (req, res) => {
+    let course_id = 25; // TODO: Update hard-coded ID
+    queryElrInLedger(req.sigma, course_id).then((result) => {
+        res.json({ 'elr': result });
+    })
 }
 
 

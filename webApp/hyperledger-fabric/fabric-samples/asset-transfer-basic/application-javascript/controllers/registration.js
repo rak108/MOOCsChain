@@ -92,7 +92,7 @@ async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTi
 async function loginUserinLedger(sigma) {
     try {   
             if (gateway == undefined){
-            gateway = await initGateway();
+                gateway = await initGateway();
             }
             
             const network = await gateway.getNetwork(channelName);
@@ -104,7 +104,7 @@ async function loginUserinLedger(sigma) {
             await registerEntitiesContract.evaluateTransaction('InitLedger');
             console.log('<==Instantiated RegisterEntities Chaincode==>');
 
-            console.log('\n--> Evaluate Transaction: queryRegistrations, function returns an ELR with a given sigma value in a course');
+            console.log('\n--> Evaluate Transaction: queryRegistrations, function returns a user with a given sigma value in a course');
             result = await registerEntitiesContract.evaluateTransaction('queryRegistrations', sigma);
             console.log(`*** Result: ${(result)}`);
                 
@@ -133,7 +133,6 @@ exports.getRegister = (req, res) => {
 exports.postLogin = async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
-    const username = req.body.name;
 
     let info = { email: email, password: password };
 
@@ -141,12 +140,11 @@ exports.postLogin = async (req, res) => {
     hmac.update('0');
     let sigma = hmac.digest('base64');
 
-
     isUser = await loginUserinLedger(sigma);
 
     if(isUser != 0) {
         let token = generateAccessToken({ moocs: sigma });
-        res.cookie('moocs', token, { maxAge: 60000 }).redirect("/lms/");
+        res.cookie('moocs', token, { maxAge: 60000 * 60 * 24 * 365 }).redirect("/lms/");
     }
     else {
         res.render("login", { title: "Error! Incorrect email or password" });
@@ -162,7 +160,7 @@ exports.postRegister = async (req, res) => {
 
     encInfo = { email: email, password: password, name: username };
 
-    const encryptedData = await eccrypto.encrypt(publicKeyA, Buffer.from(encInfo.toString()));
+    const encryptedData = await eccrypto.encrypt(publicKeyA, Buffer.from(JSON.stringify(encInfo)));
 
     let encPriv = encryptedData.toString("base64");
     let hmac = crypto.createHmac("sha256", Buffer.from(JSON.stringify(info), 'base64'));
