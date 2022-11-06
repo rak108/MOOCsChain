@@ -1,7 +1,4 @@
-const User = require("../models/users");
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
-const gway = require('../index');
 const eccrypto = require("eccrypto");
 
 const { create } = require('ipfs-http-client');
