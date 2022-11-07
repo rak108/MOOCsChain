@@ -55,7 +55,13 @@
                         <div class="card-body">
                             <h5 class="card-title"><%= course.name %></h5>
                             <p class="card-text"><%= course.description %></p>
-                            <p class="card-text"><a class="btn btn-primary" href="#">Enrol</a></p>
+                            <p class="card-text">
+                                <% if(registered_course_ids.includes(course.id)) { %>
+                                    <a class="btn btn-primary" href="/lms/course/<%= course.id %>">Continue Learning</a>
+                                <% } else { %>
+                                    <a class="btn btn-success" href="/lms/course/<%= course.id %>">Enroll</a>
+                                <% } %>
+                            </p>
                         </div>
                     </div>
                 </div>

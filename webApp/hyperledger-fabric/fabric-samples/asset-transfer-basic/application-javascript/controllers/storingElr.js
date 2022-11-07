@@ -19,6 +19,8 @@ const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
 
+const Course = require('../models/courses');
+
 function prettyJSONString(inputString) {
     return JSON.stringify(JSON.parse(inputString), null, 2);
 }
@@ -56,15 +58,6 @@ const uploadELR = async (elrTime, elrContent, courseID) => {
     const elrAdded = await ipfs.add(JSON.stringify(elr));
     console.log(elrAdded['path']);
     return elrAdded['path'];
-}
-
-const retrieveELR = async (elrStoredHash) => {
-    return await axios.get('http://localhost:8080/ipfs/' + elrStoredHash).then(res => {
-        console.log(res.data);
-        return res.data;
-    }).catch(err => {
-        console.log(err.message);
-    });
 }
 
 let gateway = undefined;
@@ -135,83 +128,39 @@ async function queryElrInLedger(sigma, course_id) {
         }
 }
 
+function queryAllELRsInLedger(sigma) {
+    // TODO: Call the blockchain contract
+    return [];
+}
+
+exports.moocsHome = async (req, res) => {
+    Course.find({}).then((all_courses, err) => {
+        if(err) res.render("home", { title: "Home", alert: `Error! ${err}`, notice: null, courses: [], registered_course_ids: [] });
+        else {
+            let courseIds = queryAllELRsInLedger(req.sigma);
+            res.render("home", { title: "Home", alert: null, notice: null, courses: all_courses, registered_course_ids: courseIds });
+        }
+    });
+}
+
 exports.uploadElrToLedger = async (req, res) => {
-    let course_id = 25; // TODO: Update hard-coded ID
+    let course_id = req.body.course_id;
 
     addElrInLedger(req.sigma, req.body.content, course_id).then(() => {
-        res.redirect("/lms/elr");
+        res.redirect(`/lms/course/${course_id}`);
     });
 }
 
 exports.retrieveELR = async (req, res) => {
-    let course_id = 25; // TODO: Update hard-coded ID
-    queryElrInLedger(req.sigma, course_id).then((result) => {
-        res.json(result);
-    });
+    let course_id = req.params.course_id;
+
+    Course.findOne({ id: parseInt(course_id) }).then(async (course, err) => {
+        if(err) res.render("course", { title: "Course", alert: `Error loading course details! ${err}`, notice: null, course: null, elrs: [] });
+        else if(!course) res.render("course", { title: "Course", alert: "Course does not exist!", notice: null, course: null, elrs: [] });
+        else {
+            queryElrInLedger(req.sigma, course_id).then((result) => {
+                res.render("course", { title: course.name, alert: null, notice: null, course: course, elrs: result });
+            });
+        }
+    });    
 }
-
-
-// function generateAccessToken(sigma) {
-//     return jwt.sign(sigma, "MYSECRET", { expiresIn: '1d' });
-// }
-
-// exports.getLogin = (req, res) => {
-//     res.render("login", { title: "Login" });
-// }
-
-// exports.getRegister = (req, res) => {
-//     res.clearCookie("moocs");
-//     res.render("register", { title: "Register" });
-// }
-
-// exports.postELR = async (req, res) => {
-//     const email = req.body.email;
-//     const password = req.body.password;
-//     const username = req.body.name;
-
-//     let info = { email: email, password: password };
-
-//     let hmac = crypto.createHmac("sha256", Buffer.from(JSON.stringify(info), 'base64'));
-//     hmac.update('0');
-//     let sigma = hmac.digest('base64');
-
-
-//     isUser = await loginUserinLedger(sigma);
-
-//     if(isUser != 0) {
-//         let token = generateAccessToken({ moocs: sigma });
-//         res.cookie('moocs', token, { maxAge: 60000 }).redirect("/lms/");
-//     }
-//     else {
-//         res.render("login", { title: "Error! Incorrect email or password" });
-//     }
-// }
-
-// exports.postRegister = async (req, res) => {
-//     const email = req.body.email;
-//     const password = req.body.password;
-//     const username = req.body.name;
-
-//     let info = { email: email, password: password };
-
-//     encInfo = { email: email, password: password, name: username };
-
-//     const encryptedData = await eccrypto.encrypt(publicKeyA, Buffer.from(encInfo.toString()));
-
-//     let encPriv = encryptedData.toString("base64");
-//     let hmac = crypto.createHmac("sha256", Buffer.from(JSON.stringify(info), 'base64'));
-//     hmac.update('0');
-//     let sigma = hmac.digest('base64');
-//     PubKey = encPriv + sigma;
-//     registrationTime = new Date().toISOString();
-
-//     registeredUser = await registerUserinLedger(sigma, encryptedData.toString(), PubKey, registrationTime);
-
-//     if(registeredUser != 0) {
-//         let token = generateAccessToken({ moocs: sigma });
-//         res.cookie('moocs', token, { maxAge: 60000 }).redirect("/lms/");
-//     }
-//     else {
-//         res.render("register", { title: "Error! User already exists!" });
-//     }
-// }
