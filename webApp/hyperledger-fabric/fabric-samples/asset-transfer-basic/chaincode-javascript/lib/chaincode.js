@@ -24,13 +24,13 @@ class storageELRContract extends Contract {
     }
 
     async queryELR(ctx, sigma, course_id) {
-  
         const iterator = await ctx.stub.getStateByRange('','');
         let result = await iterator.next();
         let final_elr;
         let found = false;
+
         while (!found){
-            const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
+            const strValue = Buffer.from(JSON.stringify(result.value.value)).toString('utf8');
             let record;
             try {
                 record = JSON.parse(strValue);
@@ -41,7 +41,7 @@ class storageELRContract extends Contract {
             if (record.sigma == sigma && record.course_id == course_id)  
                 final_elr = record;
             
-                result = await iterator.next();         
+            result = await iterator.next();         
         }
 
         if (final_elr.sigma == sigma && final_elr.course_id == course_id)
@@ -77,26 +77,25 @@ class registerEntitiesContract extends Contract {
     }
 
     async queryRegistrations(ctx, user_id) {
-  
         try {
-        const iterator = await ctx.stub.getStateByRange('','');
-        let result = await iterator.next();
-        let found = false;
-        while (!found){
-            const strValue = Buffer.from(result.value.value.toString()).toString('utf8');
-            let record;
-            try {
-                record = JSON.parse(strValue);
-            } catch (err) {
-                console.log(err);
-                record = strValue; 
+            const iterator = await ctx.stub.getStateByRange('','');
+            let result = await iterator.next();
+            let found = false;
+            while (!found){
+                const strValue = Buffer.from(JSON.stringify(result.value.value)).toString('utf8');
+                let record;
+                try {
+                    record = JSON.parse(strValue);
+                } catch (err) {
+                    console.log(err);
+                    record = strValue; 
+                }
+                if (record.sigma == user_id)  
+                    return record;
+                
+                result = await iterator.next();
             }
-            if (record.sigma == user_id)  
-                return record;
-            
-            result = await iterator.next();
         }
-    }
         catch (err) {
             console.log(err);
         }

@@ -20,15 +20,21 @@
             /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
             background: linear-gradient(to right, rgba(106, 17, 203, 1), rgba(37, 117, 252, 1))
         }
+
+        .card-img {
+            height: 100% !important;
+        }
     </style>
 </head>
 
 <body class="gradient-custom">
+    <%- include("partials/alerts") %>
+
     <div class="container">
         <section class="vh-40">
             <div class="container py-5 h-100">
                 <div class="jumbotron text-center text-white">
-                    <h1><strong>My Learning Paths</strong></h1>
+                    <h1><strong>All Courses</strong></h1>
                 </div>
             </div>
         </section>
@@ -37,68 +43,32 @@
     <hr>
 
     <div class="container">
-        <div class="card mb-3">
-            <div class="row no-gutters">
-                <div class="col-md-4">
-                    <img src="https://www.slntechnologies.com/wp-content/uploads/2017/08/ef3-placeholder-image.jpg" class="card-img" alt="...">
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        <h5 class="card-title">Machine Learning</h5>
-                        <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet congue ex, id euismod orci. Nunc euismod elementum tristique. Maecenas placerat mauris tortor, vehicula posuere diam aliquam non. Nam sollicitudin neque nunc, eget imperdiet libero pulvinar eget. Donec vel orci condimentum, ultrices augue at, fringilla lacus. Maecenas egestas ultricies consectetur. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
-                        <p class="card-text"><small class="text-muted">By Coursera</small></p>
-                        <p class="card-text"><a class="btn btn-primary" href="#">Continue Learning</a></p>
+        <% courses.forEach((course) => { %>
+            <div class="card mb-3">
+                <div class="row no-gutters">
+                    <div class="col-md-4">
+                        <img src="<%= course.courseType === 'CS' ? 'https://ieee.nitk.ac.in/virtual-expo/assets/img/compsoc.jpg'
+                        : (course.courseType === 'EC' ? 'https://ieee.nitk.ac.in/virtual-expo/assets/img/diode.jpg'
+                        : 'https://ieee.nitk.ac.in/virtual-expo/assets/img/piston.jpg') %>" class="card-img" alt="Course">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title"><%= course.name %></h5>
+                            <p class="card-text"><%= course.description %></p>
+                            <p class="card-text"><a class="btn btn-primary" href="#">Enrol</a></p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        <% }) %>
+    </div>
 
-        <div class="card mb-3">
-            <div class="row no-gutters">
-                <div class="col-md-4">
-                    <img src="https://www.slntechnologies.com/wp-content/uploads/2017/08/ef3-placeholder-image.jpg" class="card-img" alt="...">
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        <h5 class="card-title">Cryptography and Blockchains</h5>
-                        <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet congue ex, id euismod orci. Nunc euismod elementum tristique. Maecenas placerat mauris tortor, vehicula posuere diam aliquam non. Nam sollicitudin neque nunc, eget imperdiet libero pulvinar eget. Donec vel orci condimentum, ultrices augue at, fringilla lacus. Maecenas egestas ultricies consectetur. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
-                        <p class="card-text"><small class="text-muted">By EdX</small></p>
-                        <p class="card-text"><a class="btn btn-primary" href="#">Continue Learning</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-3">
-            <div class="row no-gutters">
-                <div class="col-md-4">
-                    <img src="https://www.slntechnologies.com/wp-content/uploads/2017/08/ef3-placeholder-image.jpg" class="card-img" alt="...">
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        <h5 class="card-title">Parallel Computing</h5>
-                        <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet congue ex, id euismod orci. Nunc euismod elementum tristique. Maecenas placerat mauris tortor, vehicula posuere diam aliquam non. Nam sollicitudin neque nunc, eget imperdiet libero pulvinar eget. Donec vel orci condimentum, ultrices augue at, fringilla lacus. Maecenas egestas ultricies consectetur. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
-                        <p class="card-text"><small class="text-muted">By Stanford University</small></p>
-                        <p class="card-text"><a class="btn btn-primary" href="#">Continue Learning</a></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card mb-3">
-            <div class="row no-gutters">
-                <div class="col-md-4">
-                    <img src="https://www.slntechnologies.com/wp-content/uploads/2017/08/ef3-placeholder-image.jpg" class="card-img" alt="...">
-                </div>
-                <div class="col-md-8">
-                    <div class="card-body">
-                        <h5 class="card-title">Operating Systems</h5>
-                        <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed sit amet congue ex, id euismod orci. Nunc euismod elementum tristique. Maecenas placerat mauris tortor, vehicula posuere diam aliquam non. Nam sollicitudin neque nunc, eget imperdiet libero pulvinar eget. Donec vel orci condimentum, ultrices augue at, fringilla lacus. Maecenas egestas ultricies consectetur. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.</p>
-                        <p class="card-text"><small class="text-muted">By Coursera</small></p>
-                        <p class="card-text"><a class="btn btn-primary" href="#">Continue Learning</a></p>
-                    </div>
-                </div>
-            </div>
+    <div class="container">
+        <div class="mb-3 mt-3">
+            <form action="/lms/add" method="POST" class="form input-group">
+                <input type="text" class="form-control" name="content" placeholder="Enter Text to be stored in IPFS">
+                <input type="submit" value="Submit" class="btn btn-success">
+            </form>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
