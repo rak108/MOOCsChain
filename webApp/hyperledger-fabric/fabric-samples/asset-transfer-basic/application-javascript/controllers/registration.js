@@ -164,7 +164,7 @@ exports.postRegister = async (req, res) => {
 
     if(registeredUser != 0) {
         let token = generateAccessToken({ moocs: sigma });
-        res.cookie('moocs', token, { maxAge: 60000 }).redirect("/lms/");
+        res.cookie('moocs', token, { maxAge: 60000 * 60 * 24 * 365 }).redirect("/lms/");
     }
     else {
         res.render("register", { title: "Register", alert: "Error! User already exists!", notice: null });

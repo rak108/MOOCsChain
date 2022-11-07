@@ -7,6 +7,6 @@ const middleware = require("../middleware/authentication");
 
 router.get("/", middleware.authenticateToken, moocsController.getHome);
 router.get("/elr", middleware.authenticateToken, elrController.retrieveELR);
-router.post("/add", middleware.authenticateToken, elrController.uploadElr);
+router.post("/add", middleware.authenticateToken, elrController.uploadElrToLedger);
 
 module.exports = router;

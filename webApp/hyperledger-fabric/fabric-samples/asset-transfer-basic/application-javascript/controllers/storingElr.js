@@ -3,6 +3,7 @@ const eccrypto = require("eccrypto");
 
 const { create } = require('ipfs-http-client');
 const ipfs = create('http://localhost:5001');
+const axios = require('axios');
 
 const P = 11;
 
@@ -18,7 +19,6 @@ const mspOrg1 = 'Org1MSP';
 const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
 
-
 function prettyJSONString(inputString) {
     return JSON.stringify(JSON.parse(inputString), null, 2);
 }
@@ -29,13 +29,10 @@ var publicKeyA = eccrypto.getPublic(privateKeyA);
 async function initGateway(){
 
         const ccp = buildCCPOrg1();
-
         const caClient = buildCAClient(FabricCAServices, ccp, 'ca.org1.example.com');
-
         const wallet = await buildWallet(Wallets, walletPath);
 
         await enrollAdmin(caClient, wallet, mspOrg1);
-
         await registerAndEnrollUser(caClient, wallet, mspOrg1, org1UserId, 'org1.department1');
 
         const gateway = new Gateway();
@@ -54,15 +51,15 @@ async function initGateway(){
 
 }
 
-const uploadELR = async (elrTime, content) => {
-    const elr = { timestamp: Buffer.from(elrTime), content: Buffer.from(content) };
-    const elrAdded = await ipfs.add(elr);
+const uploadELR = async (elrTime, elrContent, courseID) => {
+    const elr = { timestamp: elrTime, content: elrContent, course_id: courseID };
+    const elrAdded = await ipfs.add(JSON.stringify(elr));
     console.log(elrAdded['path']);
     return elrAdded['path'];
 }
 
 const retrieveELR = async (elrStoredHash) => {
-    return await axios.get('https://gateway.ipfs.io/ipfs/' + elrStoredHash).then(res => {
+    return await axios.get('http://localhost:8080/ipfs/' + elrStoredHash).then(res => {
         console.log(res.data);
         return res.data;
     }).catch(err => {
@@ -73,11 +70,11 @@ const retrieveELR = async (elrStoredHash) => {
 let gateway = undefined;
 
 async function addElrInLedger(sigma, elr_Content, course_id) {
-    elr_Time = new Date().toISOString();
-    const elrStoredHash = await uploadELR(elr_Content, elr_Time);
+    let elr_Time = new Date().toISOString();
+    const elrStoredHash = await uploadELR(elr_Time, elr_Content, course_id);
     console.log(`Path: ${ elrStoredHash }`);
 
-    let hmac = crypto.createHmac("sha256", sigma + elr_Content, 'base64');
+    let hmac = crypto.createHmac("sha256", sigma + elr_Content + course_id.toString(), 'base64');
     hmac.update('0');
 
     try {   
@@ -127,19 +124,19 @@ async function queryElrInLedger(sigma, course_id) {
                 console.log(`*** Result: ${prettyJSONString(result)}`);
             }
 
-            const elrStoredContent = await retrieveELR(result.hash_val);
-            result.hash_val = elrStoredContent;
-            return result;
+            let allRequests = JSON.parse(result).map((res) => { return axios.get(`http://localhost:8080/ipfs/${res.hash_val}`) });
+
+            return axios.all(allRequests).then(axios.spread((...responses) => {
+                return responses.map((res) => { return res.data });
+            }));
 
         } catch (error) {
             console.error(`******** FAILED to run the application: ${error}`);
         }
 }
 
-exports.uploadElr = async (req, res) => {
+exports.uploadElrToLedger = async (req, res) => {
     let course_id = 25; // TODO: Update hard-coded ID
-
-    console.log('uploadELR (req.sigma) ===> ', req.sigma); // TODO: Remove
 
     addElrInLedger(req.sigma, req.body.content, course_id).then(() => {
         res.redirect("/lms/elr");
@@ -149,8 +146,8 @@ exports.uploadElr = async (req, res) => {
 exports.retrieveELR = async (req, res) => {
     let course_id = 25; // TODO: Update hard-coded ID
     queryElrInLedger(req.sigma, course_id).then((result) => {
-        res.json({ 'elr': result });
-    })
+        res.json(result);
+    });
 }
 
 
