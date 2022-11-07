@@ -17,7 +17,8 @@ const moocsRoutes = require("./routes/moocs");
 const PORT = process.env.PORT || 4000;
 
 app.set("view engine", "ejs");
-app.set("views", "views");
+const path = require('path');
+app.set("views", path.join(__dirname, "views"));
 
 app.use("/", registrationRoutes);
 app.use("/lms/", moocsRoutes);

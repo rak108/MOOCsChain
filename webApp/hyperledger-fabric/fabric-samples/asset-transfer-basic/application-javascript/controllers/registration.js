@@ -24,7 +24,7 @@ function prettyJSONString(inputString) {
 var privateKeyA = eccrypto.generatePrivate();
 var publicKeyA = eccrypto.getPublic(privateKeyA);
 
-async function initGateway(){
+async function initGateway() {
     const ccp = buildCCPOrg1();
     const caClient = buildCAClient(FabricCAServices, ccp, 'ca.org1.example.com');
     const wallet = await buildWallet(Wallets, walletPath);
@@ -41,7 +41,7 @@ async function initGateway(){
             discovery: { enabled: true, asLocalhost: true } // using asLocalhost as this gateway is using a fabric network deployed locally
         });
         return gateway;
-        } catch (error) {
+    } catch (error) {
         console.error(`Error in connecting to gateway for Org1: ${error}`);
         process.exit(1);
     }
@@ -50,11 +50,11 @@ async function initGateway(){
 let gateway = undefined;
 
 async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTime) {
-    try {   
-        if (gateway == undefined){
+    try {
+        if (gateway == undefined) {
             gateway = await initGateway();
         }
-        
+
         const network = await gateway.getNetwork(channelName);
         const registerEntitiesContract = network.getContract(chaincodeName, 'registerEntitiesContract');
 
@@ -62,11 +62,6 @@ async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTi
         console.log('\n--> Evaluate Transaction: InitLedger, function initializes the ledger');
         await registerEntitiesContract.evaluateTransaction('InitLedger');
         console.log('<==Instantiated RegisterEntities Chaincode==>');
-
-        console.log('\n--> Evaluate Transaction: queryRegistrations, function returns an ELR with a given sigma value in a course');
-        result = await registerEntitiesContract.evaluateTransaction('queryRegistrations', sigma);
-        console.log(`*** Result: ${(result)}`);
-
 
         console.log('\n--> Submit Transaction: updateRegistrationInformation, creates/updates registration information with curr_id, new_id, encrypted_details, pubK, expiryTime arguments');
         result = await registerEntitiesContract.submitTransaction('updateRegistrationInformation', '', sigma, encryptedData, PubKey, registrationTime);
@@ -83,8 +78,8 @@ async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTi
 }
 
 async function loginUserinLedger(sigma) {
-    try {   
-        if (gateway == undefined){
+    try {
+        if (gateway == undefined) {
             gateway = await initGateway();
         }
 
@@ -130,10 +125,10 @@ exports.postLogin = async (req, res) => {
     let hmac = crypto.createHmac("sha256", Buffer.from(JSON.stringify(info), 'base64'));
     hmac.update('0');
     let sigma = hmac.digest('base64');
-
+    console.log(sigma)
     isUser = await loginUserinLedger(sigma);
 
-    if(isUser != 0) {
+    if (isUser != 0) {
         let token = generateAccessToken({ moocs: sigma });
         res.cookie('moocs', token, { maxAge: 60000 * 60 * 24 * 365 }).redirect("/lms/");
     }
@@ -160,9 +155,10 @@ exports.postRegister = async (req, res) => {
     PubKey = encPriv + sigma;
     registrationTime = new Date().toISOString();
 
+    console.log(sigma)
     registeredUser = await registerUserinLedger(sigma, encryptedData.toString(), PubKey, registrationTime);
 
-    if(registeredUser != 0) {
+    if (registeredUser != 0) {
         let token = generateAccessToken({ moocs: sigma });
         res.cookie('moocs', token, { maxAge: 60000 * 60 * 24 * 365 }).redirect("/lms/");
     }

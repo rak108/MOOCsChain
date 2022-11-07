@@ -1,17 +1,17 @@
 'use strict';
 
 // Deterministic JSON.stringify()
-const stringify  = require('json-stringify-deterministic');
-const sortKeysRecursive  = require('sort-keys-recursive');
+const stringify = require('json-stringify-deterministic');
+const sortKeysRecursive = require('sort-keys-recursive');
 const { Contract } = require('fabric-contract-api');
 
 class storageELRContract extends Contract {
 
-    async InitLedger(ctx){
+    async InitLedger(ctx) {
         console.log("<==Instantiated StorageELR Chaincode==>");
     }
 
-    async addELR(ctx, hmac, sigma, hash_val, course_id ) {
+    async addELR(ctx, hmac, sigma, hash_val, course_id) {
         const elr = {
             sigma: sigma,
             hash_val: hash_val,
@@ -22,68 +22,78 @@ class storageELRContract extends Contract {
     }
 
     async queryELR(ctx, sigma, course_id) {
-        const iterator = await ctx.stub.getStateByRange('','');
         let final_elrs = [];
+        const iterator = await ctx.stub.getStateByRange('', '');
+        try {
+            while (true) {
+                let result = await iterator.next();
 
-        while (true){
-            let result = await iterator.next();
-
-            if(result.value) {
-                let record;
-                try {
-                    record = JSON.parse(result.value.value.toString('utf8'));
-                } catch (err) {
-                    console.log(err);
-                    record = strValue;
+                if (result.value) {
+                    let record;
+                    try {
+                        record = JSON.parse(result.value.value.toString('utf8'));
+                    } catch (err) {
+                        console.log(err);
+                        record = strValue;
+                    }
+                    if (record.sigma == sigma && record.course_id == course_id) final_elrs.push(record);
                 }
-                if (record.sigma == sigma && record.course_id == course_id) final_elrs.push(record);
-            }
 
-            if(result.done) {
-                await iterator.close();
-
-                return final_elrs;
+                if (result.done) {
+                    await iterator.close();
+                    return final_elrs;
+                }
             }
+        } catch (err) {
+            console.log(err);
         }
+
+        return "ELR not found!";
     }
 
     async getAllELRs(ctx, sigma) {
-        const iterator = await ctx.stub.getStateByRange('','');
+        const iterator = await ctx.stub.getStateByRange('', '');
         let final_elrs = [];
 
-        while (true){
-            let result = await iterator.next();
+        try {
+            while (true) {
+                let result = await iterator.next();
 
-            if(result.value) {
-                let record;
-                try {
-                    record = JSON.parse(result.value.value.toString('utf8'));
-                } catch (err) {
-                    console.log(err);
-                    record = strValue;
+                if (result.value) {
+                    let record;
+                    try {
+                        record = JSON.parse(result.value.value.toString('utf8'));
+                    } catch (err) {
+                        console.log(err);
+                        record = strValue;
+                    }
+                    if (record.sigma == sigma && record.course_id > 0) final_elrs.push(record);
                 }
-                if (record.sigma == sigma) final_elrs.push(record);
-            }
 
-            if(result.done) {
-                await iterator.close();
+                if (result.done) {
+                    await iterator.close();
 
-                return final_elrs;
+                    return final_elrs;
+                }
             }
+        } catch (err) {
+            console.log(err);
         }
+
+        return "ELR not found!";
     }
 }
 
 class registerEntitiesContract extends Contract {
 
-    async InitLedger(ctx){
+    async InitLedger(ctx) {
         console.log("<==Instantiated RegisterEntities Chaincode==>");
     }
 
-    async updateRegistrationInformation(ctx, curr_id, new_id, encrypted_details, pubK, expiryTime ) {
+    async updateRegistrationInformation(ctx, curr_id, new_id, encrypted_details, pubK, expiryTime) {
 
         const registrationExisting = await ctx.stub.getState(curr_id)
-        if (registrationExisting && registrationExisting.length > 0){
+        if (registrationExisting && registrationExisting.length > 0) {
             await ctx.stub.deleteState(curr_id)
         }
 
@@ -100,34 +110,24 @@ class registerEntitiesContract extends Contract {
     }
 
     async queryRegistrations(ctx, user_id) {
-        const iterator = await ctx.stub.getStateByRange('','');
-
-        while (true){
-            let result = await iterator.next();
-
-            if(result.value) {
-                let record;
-                try {
-                    record = JSON.parse(result.value.value.toString('utf8'));
-                } catch (err) {
-                    console.log(err);
-                    record = strValue;
-                }
-                if (record.sigma == user_id) return record;
+        try {
+            const registrationExisting = await ctx.stub.getState(user_id)
+            if (registrationExisting && registrationExisting.length > 0) {
+                let record = JSON.parse(registrationExisting);
+                if (record.sigma == user_id)
+                    return record;
             }
-
-            if(result.done) {
-                await iterator.close();
-
-                return 0;
-            }
+        } catch (err) {
+            console.log(err);
         }
+
+        return 0;
     }
 
     async removeRegistration(ctx, curr_id) {
 
         const registrationExisting = await ctx.stub.getState(curr_id)
-        if (registrationExisting && registrationExisting.length > 0){
+        if (registrationExisting && registrationExisting.length > 0) {
             await ctx.stub.deleteState(curr_id)
         }
 
