@@ -166,3 +166,7 @@ exports.postRegister = async (req, res) => {
         res.render("register", { title: "Register", alert: "Error! User already exists!", notice: null });
     }
 }
+
+exports.logoutUser = (req, res) => {
+    res.clearCookie('moocs').redirect('/login');
+}

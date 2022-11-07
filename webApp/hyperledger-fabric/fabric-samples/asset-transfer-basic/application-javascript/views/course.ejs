@@ -71,34 +71,36 @@
             </div>
         </div>
 
-        <div class="container">
-            <% course.content.forEach((value, key) => { %>
-                <div class="card mb-3">
-                    <div class="row no-gutters">
-                        <div class="col-md-12">
-                            <div class="card-body">
-                                <h4 class="card-title"><%= key %></h4>
-                                <p class="card-text">
-                                    Follow the given resource: <a href="<%= value %>" target="_blank"><%= value %></a>
-                                    <% currentElr = elrs.find(elr => elr.content === key) %>
-                                    <% if (currentElr) { %>
-                                        <div class="text-success">
-                                            Completed on <%= new Date(currentElr.timestamp) %>
-                                        </div>
-                                    <% } else { %>
-                                        <form action="/lms/add" method="POST" onsubmit="return confirm('Are you sure you want to mark this checkpoint as done? This action cannot be undone!');">
-                                            <input type="hidden" value="<%= course.id %>" name="course_id">
-                                            <input type="hidden" value="<%= key %>" name="content">
-                                            <input type="submit" value="Mark as Done" class="btn btn-success">
-                                        </form>
-                                    <% } %>
-                                </p>
+        <% if (registeredELR) { %>
+            <div class="container">
+                <% course.content.forEach((value, key) => { %>
+                    <div class="card mb-3">
+                        <div class="row no-gutters">
+                            <div class="col-md-12">
+                                <div class="card-body">
+                                    <h4 class="card-title"><%= key %></h4>
+                                    <p class="card-text">
+                                        Follow the given resource: <a href="<%= value %>" target="_blank"><%= value %></a>
+                                        <% currentElr = elrs.find(elr => elr.content === key) %>
+                                        <% if (currentElr) { %>
+                                            <div class="text-success">
+                                                Completed on <%= new Date(currentElr.timestamp) %>
+                                            </div>
+                                        <% } else { %>
+                                            <form action="/lms/add" method="POST" onsubmit="return confirm('Are you sure you want to mark this checkpoint as done? This action cannot be undone!');">
+                                                <input type="hidden" value="<%= course.id %>" name="course_id">
+                                                <input type="hidden" value="<%= key %>" name="content">
+                                                <input type="submit" value="Mark as Done" class="btn btn-success">
+                                            </form>
+                                        <% } %>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            <% }) %>
-        </div>
+                <% }) %>
+            </div>
+        <% } %>
     <% } %>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"

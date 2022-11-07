@@ -56,7 +56,6 @@ async function initGateway() {
 const uploadELR = async (elrTime, elrContent, courseID, sigma) => {
     const elr = { timestamp: elrTime, user_id: sigma, course_id: courseID, content: elrContent };
     const elrAdded = await ipfs.add(JSON.stringify(elr));
-    console.log(elrAdded['path']);
     return elrAdded['path'];
 }
 
@@ -69,9 +68,7 @@ async function addElrInLedger(sigma, elr_Content, course_id) {
 
     let hmac = crypto.createHmac("sha256", sigma + course_id.toString() + elr_Content, 'base64');
     hmac.update('0');
-    console.log("\nNobase64", hmac)
     let Hmac = hmac.digest('base64');
-    console.log(Hmac, typeof (Hmac))
 
     try {
         if (gateway == undefined) gateway = await initGateway();
@@ -113,7 +110,7 @@ async function queryElrInLedger(sigma, course_id) {
         console.log('<==Instantiated StorageELR Chaincode==>');
 
 
-        console.log('\n--> Evaluate Transaction: queryELR, retrives all ELRs of user in course with new_id, course_id');
+        console.log('\n--> Evaluate Transaction: queryELR, retrives all ELRs of user (sigma) in course, course_id');
         result = await storageELRContract.evaluateTransaction('queryELR', sigma, course_id);
         console.log('*** Result: committed');
         if (`${result}` !== '') {
@@ -132,7 +129,6 @@ async function queryElrInLedger(sigma, course_id) {
 }
 
 async function queryAllELRsInLedger(sigma) {
-    // TODO: Call the blockchain contract
     try {
         if (gateway == undefined) gateway = await initGateway();
 
@@ -145,22 +141,28 @@ async function queryAllELRsInLedger(sigma) {
         console.log('<==Instantiated StorageELR Chaincode==>');
 
 
-        console.log('\n--> Evaluate Transaction: queryAllELRs, retrives all ELRs of user in course with new_id, course_id');
+        console.log('\n--> Evaluate Transaction: queryAllELRs, retrives all ELRs of user (sigma) in any course');
         result = await storageELRContract.evaluateTransaction('getAllELRs', sigma);
         console.log('*** Result: committed');
         if (`${result}` !== '') {
             console.log(`*** Result: ${prettyJSONString(result)}`);
         }
 
-        elrs = JSON.parse(result);
-        let course_ids_set = new Set();
-        elrs.forEach((item) => {
-            course_ids_set.add(item.course_id);
-        });
-        console.log(elrs, course_ids_set);
-        course_ids_arr = [...course_ids_set];
+        let elrs = JSON.parse(result);
+        let course_ids_map = new Map();
 
-        return course_ids_arr;
+        elrs.forEach((elr) => {
+            let course_id = parseInt(elr.course_id);
+
+            if (!course_ids_map.has(course_id)) {
+                course_ids_map.set(course_id, 0);
+            }
+            else {
+                course_ids_map.set(course_id, course_ids_map.get(course_id) + 1);
+            }
+        });
+
+        return course_ids_map;
 
     } catch (error) {
         console.error(`******** FAILED to run the application: ${error}`);
@@ -172,7 +174,6 @@ exports.moocsHome = async (req, res) => {
         if (err) res.render("home", { title: "Home", alert: `Error! ${err}`, notice: null, courses: [], registered_course_ids: [] });
         else {
         queryAllELRsInLedger(req.sigma).then((result) => {
-            console.log(result)
             res.render("home", { title: "Home", alert: null, notice: null, courses: all_courses, registered_course_ids: result });
         });
     }

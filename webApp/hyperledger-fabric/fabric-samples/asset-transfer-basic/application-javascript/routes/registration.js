@@ -12,5 +12,6 @@ router.get("/login", registrationController.getLogin);
 router.get("/register", registrationController.getRegister);
 router.post("/login", registrationController.postLogin);
 router.post("/register", registrationController.postRegister);
+router.post("/logout", middleware.authenticateToken, registrationController.logoutUser);
 
 module.exports = router;
