@@ -12,7 +12,6 @@ class storageELRContract extends Contract {
     }
 
     async addELR(ctx, hmac, sigma, hash_val, course_id ) {
-
         const elr = {
             sigma: sigma,
             hash_val: hash_val,
@@ -20,34 +19,58 @@ class storageELRContract extends Contract {
         }
         await ctx.stub.putState(hmac, Buffer.from(JSON.stringify(elr)))
         return 1;
- 
     }
 
     async queryELR(ctx, sigma, course_id) {
         const iterator = await ctx.stub.getStateByRange('','');
-        let result = await iterator.next();
-        let final_elr;
-        let found = false;
+        let final_elrs = [];
 
-        while (!found){
-            const strValue = Buffer.from(JSON.stringify(result.value.value)).toString('utf8');
-            let record;
-            try {
-                record = JSON.parse(strValue);
-            } catch (err) {
-                console.log(err);
-                record = strValue; 
+        while (true){
+            let result = await iterator.next();
+
+            if(result.value) {
+                let record;
+                try {
+                    record = JSON.parse(result.value.value.toString('utf8'));
+                } catch (err) {
+                    console.log(err);
+                    record = strValue;
+                }
+                if (record.sigma == sigma && record.course_id == course_id) final_elrs.push(record);
             }
-            if (record.sigma == sigma && record.course_id == course_id)  
-                final_elr = record;
-            
-            result = await iterator.next();         
-        }
 
-        if (final_elr.sigma == sigma && final_elr.course_id == course_id)
-            return final_elr;
-     
-        return "ELR not found!";
+            if(result.done) {
+                await iterator.close();
+
+                return final_elrs;
+            }
+        }
+    }
+
+    async getAllELRs(ctx, sigma) {
+        const iterator = await ctx.stub.getStateByRange('','');
+        let final_elrs = [];
+
+        while (true){
+            let result = await iterator.next();
+
+            if(result.value) {
+                let record;
+                try {
+                    record = JSON.parse(result.value.value.toString('utf8'));
+                } catch (err) {
+                    console.log(err);
+                    record = strValue;
+                }
+                if (record.sigma == sigma) final_elrs.push(record);
+            }
+
+            if(result.done) {
+                await iterator.close();
+
+                return final_elrs;
+            }
+        }
     }
 }
 
@@ -73,38 +96,36 @@ class registerEntitiesContract extends Contract {
 
         await ctx.stub.putState(new_id, Buffer.from(JSON.stringify(details)))
         return 1;
- 
+
     }
 
     async queryRegistrations(ctx, user_id) {
-        try {
-            const iterator = await ctx.stub.getStateByRange('','');
+        const iterator = await ctx.stub.getStateByRange('','');
+
+        while (true){
             let result = await iterator.next();
-            let found = false;
-            while (!found){
-                const strValue = Buffer.from(JSON.stringify(result.value.value)).toString('utf8');
+
+            if(result.value) {
                 let record;
                 try {
-                    record = JSON.parse(strValue);
+                    record = JSON.parse(result.value.value.toString('utf8'));
                 } catch (err) {
                     console.log(err);
-                    record = strValue; 
+                    record = strValue;
                 }
-                if (record.sigma == user_id)  
-                    return record;
-                
-                result = await iterator.next();
+                if (record.sigma == user_id) return record;
+            }
+
+            if(result.done) {
+                await iterator.close();
+
+                return 0;
             }
         }
-        catch (err) {
-            console.log(err);
-        }
-     
-        return 0;
     }
 
     async removeRegistration(ctx, curr_id) {
-  
+
         const registrationExisting = await ctx.stub.getState(curr_id)
         if (registrationExisting && registrationExisting.length > 0){
             await ctx.stub.deleteState(curr_id)
@@ -112,7 +133,7 @@ class registerEntitiesContract extends Contract {
 
         return 1;
     }
-   
+
 }
 
 module.exports.storageELRContract = storageELRContract;
