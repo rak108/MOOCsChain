@@ -155,7 +155,6 @@ exports.postRegister = async (req, res) => {
     PubKey = encPriv + sigma;
     registrationTime = new Date().toISOString();
 
-    console.log(sigma)
     registeredUser = await registerUserinLedger(sigma, encryptedData.toString(), PubKey, registrationTime);
 
     if (registeredUser != 0) {

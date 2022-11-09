@@ -20,6 +20,8 @@ const walletPath = path.join(__dirname, 'wallet');
 const org1UserId = 'appUser';
 
 const Course = require('../models/courses');
+const Discussion = require('../models/discussions');
+const Reply = require('../models/replies');
 
 function prettyJSONString(inputString) {
     return JSON.stringify(JSON.parse(inputString), null, 2);
@@ -192,11 +194,19 @@ exports.retrieveELR = async (req, res) => {
     let course_id = req.params.course_id;
 
     Course.findOne({ id: parseInt(course_id) }).then(async (course, err) => {
-        if (err) res.render("course", { title: "Course", alert: `Error loading course details! ${err}`, notice: null, course: null, elrs: [] });
-        else if (!course) res.render("course", { title: "Course", alert: "Course does not exist!", notice: null, course: null, elrs: [] });
+        if (err) res.render("course", { title: "Course", alert: `Error loading course details! ${err}`, notice: null, course: null, elrs: [], discussions: [], userSigma: req.sigma, replies: [] });
+        else if (!course) res.render("course", { title: "Course", alert: "Course does not exist!", notice: null, course: null, elrs: [], discussions: [], userSigma: req.sigma, replies: [] });
         else {
-            queryElrInLedger(req.sigma, course_id).then((result) => {
-                res.render("course", { title: course.name, alert: null, notice: null, course: course, elrs: result });
+            Discussion.find({ course_id: course._id }).then(async (discussions ,err) => {
+                if (err) res.render("course", { title: "Course", alert: `Error loading course discussions! ${err}`, notice: null, course: null, elrs: [], discussions: [], userSigma: req.sigma, replies: [] });
+                else {
+                    let discussion_ids = discussions.map((disc) => { return disc._id });
+                    replies = await Reply.find({ 'discussion_id': { $in: discussion_ids } });
+
+                    queryElrInLedger(req.sigma, course_id).then((result) => {
+                        res.render("course", { title: course.name, alert: null, notice: null, course: course, elrs: result, discussions: discussions, userSigma: req.sigma, replies: replies });
+                    });
+                }
             });
         }
     });

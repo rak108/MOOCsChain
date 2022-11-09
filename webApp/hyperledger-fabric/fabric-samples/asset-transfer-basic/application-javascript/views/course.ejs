@@ -31,6 +31,8 @@
     <%- include("partials/alerts") %>
 
     <div class="container">
+        <%- include("partials/navbar") %>
+
         <section class="vh-40">
             <div class="container py-5 h-100">
                 <div class="jumbotron text-center text-white">
@@ -54,16 +56,16 @@
                             <p class="card-text"><%= course.description %></p>
                             <p class="card-text text-center">
                                 <% if (registeredELR) { %>
-                                    <div class="alert alert-success">
-                                        <%= registeredELR.content %> on <%= new Date(registeredELR.timestamp) %>
-                                    </div>
-                                <% } else { %>
-                                    <form action="/lms/add" method="POST" class="text-center">
-                                        <input type="hidden" value="<%= course.id %>" name="course_id">
-                                        <input type="hidden" value="Registered" name="content">
-                                        <input type="submit" value="Enroll" class="btn btn-success">
-                                    </form>
-                                <% } %>
+                            <div class="alert alert-success">
+                                <%= registeredELR.content %> on <%= new Date(registeredELR.timestamp) %>
+                            </div>
+                            <% } else { %>
+                            <form action="/lms/add" method="POST" class="text-center">
+                                <input type="hidden" value="<%= course.id %>" name="course_id">
+                                <input type="hidden" value="Registered" name="content">
+                                <input type="submit" value="Enroll" class="btn btn-success">
+                            </form>
+                            <% } %>
                             </p>
                         </div>
                     </div>
@@ -73,32 +75,98 @@
 
         <% if (registeredELR) { %>
             <div class="container">
-                <% course.content.forEach((value, key) => { %>
-                    <div class="card mb-3">
-                        <div class="row no-gutters">
-                            <div class="col-md-12">
-                                <div class="card-body">
-                                    <h4 class="card-title"><%= key %></h4>
-                                    <p class="card-text">
-                                        Follow the given resource: <a href="<%= value %>" target="_blank"><%= value %></a>
-                                        <% currentElr = elrs.find(elr => elr.content === key) %>
-                                        <% if (currentElr) { %>
-                                            <div class="text-success">
-                                                Completed on <%= new Date(currentElr.timestamp) %>
-                                            </div>
+                <div class="row">
+                    <div class="col-md-8">
+                        <% course.content.forEach((value, key) => { %>
+                        <div class="card mb-3">
+                            <div class="row no-gutters">
+                                <div class="col-md-12">
+                                    <div class="card-body">
+                                        <h4 class="card-title"><%= key %></h4>
+                                        <p class="card-text">
+                                            Follow the given resource: <a href="<%= value %>" target="_blank"><%= value %></a>
+                                            <% currentElr = elrs.find(elr => elr.content === key) %>
+                                            <% if (currentElr) { %>
+                                        <div class="text-success">
+                                            Completed on <%= new Date(currentElr.timestamp) %>
+                                        </div>
                                         <% } else { %>
-                                            <form action="/lms/add" method="POST" onsubmit="return confirm('Are you sure you want to mark this checkpoint as done? This action cannot be undone!');">
-                                                <input type="hidden" value="<%= course.id %>" name="course_id">
-                                                <input type="hidden" value="<%= key %>" name="content">
-                                                <input type="submit" value="Mark as Done" class="btn btn-success">
-                                            </form>
+                                        <form action="/lms/add" method="POST"
+                                            onsubmit="return confirm('Are you sure you want to mark this checkpoint as done? This action cannot be undone!');">
+                                            <input type="hidden" value="<%= course.id %>" name="course_id">
+                                            <input type="hidden" value="<%= key %>" name="content">
+                                            <input type="submit" value="Mark as Done" class="btn btn-success">
+                                        </form>
                                         <% } %>
-                                    </p>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <% }) %>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="row no-gutters">
+                                <div class="col-md-12">
+                                    <div class="card-body">
+                                        <h4 class="card-title">Discussion Forum</h4>
+                                        <% if (discussions.length == 0) { %>
+                                            <p class="card-text">
+                                                No comments yet
+                                            </p>
+                                        <% } %>
+
+                                        <p class="card-text">
+                                            <ol class="list-group list-group-numbered">
+                                                <% discussions.forEach((discussion) => { %>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                                                        <div class="ms-2 me-auto" style="width: 100% !important;">
+                                                            <div class="fw-bold">
+                                                                <%= discussion.content %>
+
+                                                                <% if (discussion.userSigma === userSigma) { %>
+                                                                    <span class="badge rounded-pill bg-primary float-end">Me</span>
+                                                                <% } %>
+                                                            </div>
+
+                                                            <% let curr_discussion_replies = replies.filter((reply) => reply.discussion_id.toString() === discussion._id.toString()) %>
+
+                                                            <% if (curr_discussion_replies.length > 0) { %>
+                                                                <ul class="list-group list-group-flush">
+                                                                    <% curr_discussion_replies.forEach((reply) => { %>
+                                                                        <li class="list-group-item" style="font-size: 0.9rem !important;">
+                                                                            <%= reply.content %>
+
+                                                                            <% if (reply.userSigma === discussion.userSigma) { %>
+                                                                                <span class="badge rounded-pill bg-info text-dark float-end">Author</span>
+                                                                            <% } %>
+                                                                        </li>
+                                                                    <% }) %>
+                                                                </ul>
+                                                            <% } %>
+
+                                                            <div id="reply_form_<%= discussion._id %>"></div>
+                                                            <button class="btn fs-6 fw-lighter" onclick="return openReplyForm(this, '<%= discussion._id %>');">Reply</button>
+                                                        </div>
+                                                    </li>
+                                                <% }) %>
+                                            </ol>
+                                        </p>
+
+                                        <p class="card-text">
+                                            <form action="/lms/discuss" method="POST" class="input-group">
+                                                <input type="hidden" name="course_id", value="<%= course.id %>">
+                                                <input type="text" name="discussion" placeholder="Start a new discussion..." class="form-control">
+                                                <button class="btn btn-primary" type="submit">Comment</button>
+                                            </div>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                <% }) %>
+                </div>
             </div>
         <% } %>
     <% } %>
@@ -106,6 +174,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
         crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
+
+    <script>
+        function openReplyForm(button, discussion_id) {
+            $(`#reply_form_${discussion_id}`).html(`<%- include("partials/reply", { course: course }) %>`);
+            $(button).hide();
+            $(`#reply_form_${discussion_id} #reply_discuss_id`).val(discussion_id.toString());
+        }
+    </script>
 </body>
 
 </html>
