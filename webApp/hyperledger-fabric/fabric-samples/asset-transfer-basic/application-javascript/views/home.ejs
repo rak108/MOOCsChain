@@ -31,6 +31,8 @@
     <%- include("partials/alerts") %>
 
     <div class="container">
+        <%- include("partials/navbar") %>
+
         <section class="vh-40">
             <div class="container py-5 h-100">
                 <div class="jumbotron text-center text-white">
@@ -44,42 +46,42 @@
 
     <div class="container">
         <% courses.forEach((course) => { %>
+        <% if (Array.from(registered_course_ids.keys()).includes(course.id)) { %>
+        <div class="card mb-3"
+            title="<%= registered_course_ids.get(course.id) %> / <%= course.checkpoints %> Checkpoints Complete">
+            <% } else { %>
             <div class="card mb-3">
+                <% } %>
                 <div class="row no-gutters">
                     <div class="col-md-4">
                         <img src="<%= course.courseType === 'CS' ? 'https://ieee.nitk.ac.in/virtual-expo/assets/img/compsoc.jpg'
-                        : (course.courseType === 'EC' ? 'https://ieee.nitk.ac.in/virtual-expo/assets/img/diode.jpg'
-                        : 'https://ieee.nitk.ac.in/virtual-expo/assets/img/piston.jpg') %>" class="card-img" alt="Course">
+                            : (course.courseType === 'EC' ? 'https://ieee.nitk.ac.in/virtual-expo/assets/img/diode.jpg'
+                            : 'https://ieee.nitk.ac.in/virtual-expo/assets/img/piston.jpg') %>" class="card-img"
+                            alt="Course">
                     </div>
                     <div class="col-md-8">
                         <div class="card-body">
                             <h5 class="card-title"><%= course.name %></h5>
                             <p class="card-text"><%= course.description %></p>
                             <p class="card-text">
-                                <% if(registered_course_ids.includes(course.id)) { %>
-                                    <a class="btn btn-primary" href="/lms/course/<%= course.id %>">Continue Learning</a>
+                                <% if (!Array.from(registered_course_ids.keys()).includes(course.id)) { %>
+                                <a class="btn btn-info" href="/lms/course/<%= course.id %>">Enroll</a>
+                                <% } else if (registered_course_ids.get(course.id) == course.checkpoints) { %>
+                                <a class="btn btn-success" href="/lms/course/<%= course.id %>">Course Completed</a>
                                 <% } else { %>
-                                    <a class="btn btn-success" href="/lms/course/<%= course.id %>">Enroll</a>
+                                <a class="btn btn-primary" href="/lms/course/<%= course.id %>">Continue Learning</a>
                                 <% } %>
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
-        <% }) %>
-    </div>
-
-    <div class="container">
-        <div class="mb-3 mt-3">
-            <form action="/lms/add" method="POST" class="form input-group">
-                <input type="text" class="form-control" name="content" placeholder="Enter Text to be stored in IPFS">
-                <input type="submit" value="Submit" class="btn btn-success">
-            </form>
+            <% }) %>
         </div>
-    </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-        crossorigin="anonymous"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"></script>
 </body>
 
 </html>

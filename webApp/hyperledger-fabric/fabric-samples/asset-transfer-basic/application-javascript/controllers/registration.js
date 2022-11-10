@@ -155,7 +155,6 @@ exports.postRegister = async (req, res) => {
     PubKey = encPriv + sigma;
     registrationTime = new Date().toISOString();
 
-    console.log(sigma)
     registeredUser = await registerUserinLedger(sigma, encryptedData.toString(), PubKey, registrationTime);
 
     if (registeredUser != 0) {
@@ -165,4 +164,8 @@ exports.postRegister = async (req, res) => {
     else {
         res.render("register", { title: "Register", alert: "Error! User already exists!", notice: null });
     }
+}
+
+exports.logoutUser = (req, res) => {
+    res.clearCookie('moocs').redirect('/login');
 }
