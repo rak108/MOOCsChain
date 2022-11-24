@@ -49,7 +49,7 @@ async function initGateway() {
 
 let gateway = undefined;
 
-async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTime) {
+async function registerUserinLedger(sigma, encryptedData, registrationTime) {
     try {
         if (gateway == undefined) {
             gateway = await initGateway();
@@ -64,7 +64,7 @@ async function registerUserinLedger(sigma, encryptedData, PubKey, registrationTi
         console.log('<==Instantiated RegisterEntities Chaincode==>');
 
         console.log('\n--> Submit Transaction: updateRegistrationInformation, creates/updates registration information with curr_id, new_id, encrypted_details, pubK, expiryTime arguments');
-        result = await registerEntitiesContract.submitTransaction('updateRegistrationInformation', '', sigma, encryptedData, PubKey, registrationTime);
+        result = await registerEntitiesContract.submitTransaction('updateRegistrationInformation', '', sigma, encryptedData, registrationTime);
         console.log('*** Result: committed');
         if (`${result}` !== '') {
             console.log(`*** Result: ${prettyJSONString(result)}`);
@@ -152,10 +152,9 @@ exports.postRegister = async (req, res) => {
     let hmac = crypto.createHmac("sha256", Buffer.from(JSON.stringify(info), 'base64'));
     hmac.update('0');
     let sigma = hmac.digest('base64');
-    PubKey = encPriv + sigma;
     registrationTime = new Date().toISOString();
 
-    registeredUser = await registerUserinLedger(sigma, encryptedData.toString(), PubKey, registrationTime);
+    registeredUser = await registerUserinLedger(sigma, encPriv, registrationTime);
 
     if (registeredUser != 0) {
         let token = generateAccessToken({ moocs: sigma });

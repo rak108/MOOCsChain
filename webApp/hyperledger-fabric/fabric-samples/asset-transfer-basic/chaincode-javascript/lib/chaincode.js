@@ -90,7 +90,7 @@ class registerEntitiesContract extends Contract {
         console.log("<==Instantiated RegisterEntities Chaincode==>");
     }
 
-    async updateRegistrationInformation(ctx, curr_id, new_id, encrypted_details, pubK, expiryTime) {
+    async updateRegistrationInformation(ctx, curr_id, new_id, encrypted_details, expiryTime) {
 
         const registrationExisting = await ctx.stub.getState(curr_id)
         if (registrationExisting && registrationExisting.length > 0) {
@@ -100,7 +100,6 @@ class registerEntitiesContract extends Contract {
         const details = {
             sigma: new_id,
             encrypted_details: encrypted_details,
-            owner_key: pubK,
             expiryTime: expiryTime,
         }
 
